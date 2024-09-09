@@ -14,6 +14,4 @@ Key Features:
 
 This tool is ideal for musicians, music producers, educators, and hobbyists to explore and understand the relationships between frequencies, notes, and rhythms.
 
-For more information or support, please contact Dmitriy Petrov Krastev.
-ratracedmtrix@gmail.com
 """
