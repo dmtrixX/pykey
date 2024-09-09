@@ -1,5 +1,3 @@
-Neu! Tastenkombinationen … Die Tastenkombinationen für Drive wurden aktualisiert, damit Sie mit den ersten Buchstaben navigieren können
-pythoapp.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pygame
