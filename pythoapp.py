@@ -1,12 +1,12 @@
+import numpy as np
+import pygame
 import tkinter as tk
 from tkinter import ttk, messagebox
-import pygame
-import numpy as np
 
 class NoteFrequencyCalculator:
     def __init__(self, master):
         self.master = master
-        self.master.title("Note Frequency to BPM Calculator")
+        self.master.title("Py Key player")
         
         self.base_frequency = tk.DoubleVar(value=32.59)
         self.base_frequency.trace('w', self.update_note_info)
@@ -16,7 +16,7 @@ class NoteFrequencyCalculator:
         self.setup_widgets()
         self.update_note_info()
 
-        pygame.mixer.init()
+        pygame.mixer.init(frequency=44100)
 
     def setup_widgets(self):
         tk.Label(self.master, text="Note").grid(row=0, column=0, padx=5, pady=5)
@@ -32,7 +32,7 @@ class NoteFrequencyCalculator:
         self.update_button = ttk.Button(self.master, text="Update", command=self.update_note_info)
         self.update_button.grid(row=1, column=1, padx=5, pady=5)
 
-        self.freq_slider = ttk.Scale(self.master, from_=1, to=36, variable=self.base_frequency, orient='horizontal', command=self.update_note_info)
+        self.freq_slider = ttk.Scale(self.master, from_=18, to=36, variable=self.base_frequency, orient='horizontal', command=self.update_note_info)
         self.freq_slider.grid(row=1, column=2, columnspan=4, padx=5, pady=5, sticky='ew')
 
         self.master.bind("<Button-3>", self.increment_frequency)
@@ -72,23 +72,36 @@ class NoteFrequencyCalculator:
             tk.Label(self.master, text=f"{bpm1:.2f}").grid(row=i, column=3, padx=5, pady=5)
             tk.Label(self.master, text=f"{bpm2:.2f}").grid(row=i, column=4, padx=5, pady=5)
             tk.Label(self.master, text=f"{bpm3:.2f}").grid(row=i, column=5, padx=5, pady=5)
-            tk.Button(self.master, text="Play", command=lambda f=frequency: self.play_frequency(f)).grid(row=i, column=6, padx=5, pady=5)
+            tk.Button(self.master, text="\u25B6""Play", command=lambda f=frequency: self.play_frequency(f)).grid(row=i, column=6, padx=5, pady=5)
 
     def increment_frequency(self, event):
-        self.base_frequency.set(self.base_frequency.get() + 0.01)  # Increment by 0.01
+        self.base_frequency.set(self.base_frequency.get() + 0.01)
         self.update_note_info()
 
     def scroll_frequency(self, event):
-        self.base_frequency.set(self.base_frequency.get() + (0.01 if event.delta > 0 else -0.01))  # Increment/decrement by 0.01
+        self.base_frequency.set(self.base_frequency.get() + (0.01 if event.delta > 0 else -0.01))  
         self.update_note_info()
 
     def play_frequency(self, frequency):
-        fs = 44100  # 44100 samples per second
-        seconds = 1  # Note duration of 1 second
+        fs = 44100  
+        seconds = 1.8
+        fade_duration = 0.03
+        
         t = np.linspace(0, seconds, int(fs * seconds), False)
+        
         note = np.sin(frequency * t * 2 * np.pi)
-        note = np.column_stack((note,note))
-        audio = (note * 32767).astype(np.int16)  # Convert to 16-bit PCM
+        
+        fade_samples = int(fade_duration * fs)
+        fade_in = np.linspace(0, 1, fade_samples)
+        fade_out = np.linspace(1, 0, fade_samples)
+        
+        fade = np.ones_like(note)
+        fade[:fade_samples] = fade_in 
+        fade[-fade_samples:] = fade_out
+        
+        note *= fade
+        note = np.column_stack((note, note))
+        audio = (note * 32767).astype(np.int16)
         sound = pygame.sndarray.make_sound(audio)
         sound.play()
 
@@ -109,7 +122,23 @@ class NoteFrequencyCalculator:
             messagebox.showerror("Load Configuration", f"Error loading configuration: {e}")
 
     def show_about(self):
-        messagebox.showinfo("About", "Note Frequency to BPM Calculator\nVersion 1.0\nDeveloped by Dmitriy Krastev")
+        messagebox.showinfo("About", "Note Frequency to BPM Calculator and Key Player\n"
+        "Version 1.0\n"
+        "Developed by Dmitriy Krastev\n\n"
+        "This application allows you to calculate the frequencies of musical notes based on a base frequency input, "
+        "using the Pythagorean tuning system. The Pythagorean tuning system is an ancient method of tuning that is based "
+        "on pure perfect fifths (3:2 ratio) and other simple ratios derived from it. This system emphasizes harmonic "
+        "relationships that are pleasing to the ear.\n\n"
+        "Key Features:\n"
+        "- Calculate note frequencies from a base frequency using Pythagorean ratios.\n"
+        "- Convert note frequencies to beats per minute (BPM) for different subdivisions.\n"
+        "- Real-time updates and user-friendly controls for adjusting frequencies.\n"
+        "- Play calculated note frequencies.\n"
+        "- Save and load configurations for recurring use.\n\n"
+        "This tool is ideal for musicians, music producers, educators, and hobbyists to explore and understand "
+        "the relationships between frequencies, notes, and rhythms.\n\n"
+        "For more information or support, please contact Dmitriy Petrov Krastev.\n"
+        "ratracedmtrix@gmail.com")
 
 def main():
     root = tk.Tk()
